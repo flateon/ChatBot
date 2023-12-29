@@ -1,0 +1,66 @@
+import base64
+
+import dashscope
+import sys
+
+import numpy as np
+import pyaudio
+import requests
+from dashscope.api_entities.dashscope_response import SpeechSynthesisResponse
+from dashscope.audio.tts import ResultCallback, SpeechSynthesizer, SpeechSynthesisResult
+from keys import dashscope_keys
+
+dashscope.api_key = dashscope_keys
+
+
+class TerminalTTSCallback(ResultCallback):
+    def __init__(self, sample_rate=24000):
+        self._player = None
+        self._stream = None
+        self.sample_rate = sample_rate
+
+    def on_open(self):
+        self._player = pyaudio.PyAudio()
+        self._stream = self._player.open(
+            format=pyaudio.paInt16,
+            channels=1,
+            rate=self.sample_rate,
+            output=True)
+
+    def on_error(self, response: SpeechSynthesisResponse):
+        print('Speech synthesizer failed, response is %s' % (str(response)))
+
+    def on_close(self):
+        self._stream.stop_stream()
+        self._stream.close()
+        self._player.terminate()
+
+    def on_event(self, result: SpeechSynthesisResult):
+        if result.get_audio_frame() is not None:
+            self._stream.write(result.get_audio_frame())
+
+        if result.get_timestamp() is not None:
+            print('timestamp result:', str(result.get_timestamp()))
+
+
+class TTS:
+    def __init__(self, callback: ResultCallback = None, model='sambert-zhiyuan-v1', sample_rate=24000):
+        self.callback = callback if callback is not None else ResultCallback()
+        self.model = model
+        self.sample_rate = sample_rate
+
+    def say(self, text: str):
+        return SpeechSynthesizer.call(model=self.model, text=text, sample_rate=self.sample_rate, format='wav',
+                                      callback=self.callback)
+
+
+if __name__ == '__main__':
+    text = """我在获取今天的科技新闻，稍等一下。"""
+
+    callback = TerminalTTSCallback()
+    tts = TTS(callback=callback, sample_rate=24000)
+    result = tts.say(text)
+
+    if result.get_audio_data() is not None:
+        with open('output_48k.wav', 'wb') as f:
+            f.write(result.get_audio_data())
