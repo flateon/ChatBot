@@ -7,7 +7,7 @@ if __name__ == '__main__':
     tts = TTS(TerminalTTSCallback())
     llm = LLMPlugin(TerminalCallback(tts))
 
-    # mgs = llm.generate('今天天气怎么样？').content
     while True:
         user_msg = asr.start()
+        # user_msg = input('user: ')
         mgs = llm.generate(user_msg).content

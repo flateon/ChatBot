@@ -136,7 +136,7 @@ class TerminalCallback(LLMCallback):
         print(text[self.head_idx:len(text)], end='', flush=True)
 
         if self.tts is not None:
-            sentences = re.split('(\. |。|! |！|\? |？|; |；|:|：|\n|\.$|\.\n)', text)
+            sentences = re.split('(\. |。|! |！|\? |？|;|；|:|：|\n|\.$|\.\n)', text)
             # discard last sentence
             for sentence in [t + p for t, p in zip(sentences[::2], sentences[1::2])]:
                 if sentence.strip() in '.。!！?？;；:：\n' or sentence in self.read:
