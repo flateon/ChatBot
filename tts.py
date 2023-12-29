@@ -54,6 +54,35 @@ class TTS:
                                       callback=self.callback)
 
 
+class TTSLocal:
+    def __init__(self, callback: ResultCallback = None, server='127.0.0.1', port=8888, sample_rate=None):
+        self.callback = callback if callback is not None else ResultCallback()
+        self.url = f'http://{server}:{port}/paddlespeech/tts/streaming'
+        self.sr_url = f'http://{server}:{port}/paddlespeech/tts/streaming/samplerate'
+
+        if sample_rate is None:
+            self.sample_rate = requests.get(self.sr_url).json()["sample_rate"]
+        else:
+            self.sample_rate = sample_rate
+        self.callback.sample_rate = self.sample_rate
+
+    def say(self, text: str):
+        all_bytes = b''
+        html = requests.post(url=self.url, json={'text': text, 'spk_id': 0}, stream=True)
+        self.callback.on_open()
+
+        for chunk in html.iter_content(chunk_size=None):
+            audio = base64.b64decode(chunk)
+            all_bytes += audio
+            self.callback.on_event(SpeechSynthesisResult(audio, None, None, None, None))
+
+        html.close()
+
+        self.callback.on_close()
+
+        return SpeechSynthesisResult(all_bytes, None, None, None, None)
+
+
 if __name__ == '__main__':
     text = """我在获取今天的科技新闻，稍等一下。"""
 

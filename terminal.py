@@ -1,6 +1,6 @@
 from asr import ASR, TerminalASRCallback
 from llm import LLMPlugin, TerminalCallback
-from tts import TTS, TerminalTTSCallback
+from tts import TTS, TTSLocal, TerminalTTSCallback
 
 if __name__ == '__main__':
     asr = ASR(TerminalASRCallback())

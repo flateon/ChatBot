@@ -9,7 +9,7 @@ from dashscope.audio.tts import ResultCallback
 from keys import dashscope_keys
 from plugins import get_weather, get_news
 from prompts import SYSTEM_PROMPT, TOOL_PROMPT
-from tts import TerminalTTSCallback, TTS
+from tts import TerminalTTSCallback, TTS, TTSLocal
 
 dashscope.api_key = dashscope_keys
 
@@ -112,7 +112,7 @@ class LLMPlugin(LLM):
 
 
 class TerminalCallback(LLMCallback):
-    def __init__(self, tts: TTS = None):
+    def __init__(self, tts: TTS | TTSLocal = None):
         super().__init__()
         self.head_idx = 0
         self.read = []
