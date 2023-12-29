@@ -1,4 +1,5 @@
 import base64
+import re
 
 import dashscope
 import sys
@@ -44,13 +45,20 @@ class TerminalTTSCallback(ResultCallback):
 
 
 class TTS:
-    def __init__(self, callback: ResultCallback = None, model='sambert-zhiyuan-v1', sample_rate=24000):
+    def __init__(self, callback: ResultCallback = None, model={'zh': 'sambert-zhiyuan-v1', 'en': 'sambert-cindy-v1'},
+                 sample_rate=24000):
         self.callback = callback if callback is not None else ResultCallback()
         self.model = model
         self.sample_rate = sample_rate
 
     def say(self, text: str):
-        return SpeechSynthesizer.call(model=self.model, text=text, sample_rate=self.sample_rate, format='wav',
+        # 如果中文字符所占比例大于0.2
+        if len(''.join(re.findall(r'[\u4e00-\u9fff]+', text))) / len(text) > 0.2:
+            model = self.model['zh']
+        else:
+            model = self.model['en']
+
+        return SpeechSynthesizer.call(model=model, text=text, sample_rate=self.sample_rate, format='wav',
                                       callback=self.callback)
 
 
