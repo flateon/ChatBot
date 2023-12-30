@@ -6,22 +6,15 @@ from keys import dashscope_keys
 dashscope.api_key = dashscope_keys
 
 
-class ASR:
-    def __init__(self, callback: RecognitionCallback, disfluency_removal=True) -> None:
+class ASR(Recognition):
+    def __init__(self, callback: RecognitionCallback, model: str = 'paraformer-realtime-v1', format: str = 'pcm',
+                 sample_rate: int = 16000, disfluency_removal=True, **kwargs) -> None:
+        super().__init__(model, callback, format, sample_rate, disfluency_removal=disfluency_removal, **kwargs)
         self.callback = callback
-        self.recognizer = Recognition(model='paraformer-realtime-v1', format='pcm', sample_rate=16000,
-                                      callback=callback,
-                                      disfluency_removal_enabled=disfluency_removal)
 
-    def start(self):
-        self.callback.done = False
+    def get_sentence(self):
+        if self.callback.done:
+            return self.callback.sentence
 
-        self.recognizer.start()
-
-        while not self.callback.done:
-            data = self.callback.stream.read(3200, exception_on_overflow=False)
-            self.recognizer.send_audio_frame(data)
-
-        self.recognizer.stop()
-
-        return self.callback.return_sentence
+    def is_done(self):
+        return self.callback.done
