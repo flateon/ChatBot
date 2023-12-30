@@ -4,12 +4,10 @@ from datetime import date
 
 import dashscope
 from dashscope.api_entities.dashscope_response import Message, Role
-from dashscope.audio.tts import ResultCallback
 
 from keys import dashscope_keys
 from plugins import get_weather, get_news
 from prompts import SYSTEM_PROMPT, TOOL_PROMPT
-from tts import TerminalTTSCallback, TTS, TTSLocal
 
 dashscope.api_key = dashscope_keys
 
@@ -109,62 +107,3 @@ class LLMPlugin(LLM):
         reply = super().generate(TOOL_PROMPT.format(api_response, user_request))
 
         return reply
-
-
-class TerminalCallback(LLMCallback):
-    def __init__(self, tts: TTS | TTSLocal = None):
-        super().__init__()
-        self.head_idx = 0
-        self.read = []
-        self.tts = tts if tts is not None else None
-
-    def on_open(self):
-        print('\nassistant: ', end='')
-
-    def on_complete(self):
-        print('')
-        self.head_idx = 0
-        self.read = []
-
-    def on_event(self, msg):
-        text = msg.content
-        if '`' in text or 'get' in text:
-            if 'get_' in text:
-                text = re.sub(r'`?get_(news|weather)?\(?.*?(\)|$)`?', '', text).strip()
-            else:
-                return
-        print(text[self.head_idx:len(text)], end='', flush=True)
-
-        if self.tts is not None:
-            sentences = re.split('(\. |。|! |！|\? |？|;|；|:|：|\n|\.$|\.\n)', text)
-            # discard last sentence
-            for sentence in [t + p for t, p in zip(sentences[::2], sentences[1::2])]:
-                if sentence.strip() in '.。!！?？;；:：\n' or sentence in self.read:
-                    pass
-                else:
-                    self.tts.say(sentence)
-                    self.read.append(sentence)
-
-        self.head_idx = len(text)
-
-
-def demo():
-    callback = TerminalCallback()
-    llm = LLMPlugin(callback)
-    for i in range(10):
-        reply = llm.generate(input('user: '), )
-
-
-def test():
-    test_case = ['今天南京的天气怎么样', '今天北京的天气怎么样', '昨天的天气怎么样', '今天有什么新闻',
-                 '今天有什么AI新闻']
-    callback = TerminalCallback()
-    llm = LLMPlugin(callback)
-    for t in test_case:
-        print(f'\nuser: {t}')
-        reply = llm.generate(t)
-
-
-if __name__ == '__main__':
-    # demo()
-    test()
