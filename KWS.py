@@ -8,12 +8,18 @@ import torch
 import torchaudio
 from dtaidistance.dtw_ndim import distance_fast
 
+from kws_plmodel import Wav2Vec2Finetuner
+
 
 class KeywordSpotter():
     def __init__(self):
-        bundle = torchaudio.pipelines.WAV2VEC2_BASE
-        self.acoustic_model = bundle.get_model()
-        self.sr = bundle.sample_rate
+        # bundle = torchaudio.pipelines.WAV2VEC2_BASE
+        # self.acoustic_model = bundle.get_model()
+        # self.sr = bundle.sample_rate
+        self.acoustic_model = Wav2Vec2Finetuner(114514, 219)
+        self.acoustic_model.load_state_dict(
+            torch.load('./Checkpoints/Finetune_test/epoch=5-step=60000.pt'))
+        self.sr = 16000
         self.buffer = []
         self.window_size = 10
         self.overlap_size = 10
