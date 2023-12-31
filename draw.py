@@ -1,6 +1,7 @@
 from PIL import Image
 import rich
 from rich.console import Console
+from rich.text import Text
 import os
 import time
 
@@ -35,12 +36,12 @@ if __name__ == '__main__':
     img_strs = []
     for f in os.listdir(folder):
         img = Image.open(os.path.join(folder, f))
-        s = to_string(img, 70, True)
-        img_strs.append(s)
+        s = to_string(img, 40, True)
+        img_strs.append(Text.from_markup(s))
     
     console = Console()
     for s in img_strs:
         console.clear()
-        console.print(s, justify='center', width=100)
+        console.print(s, justify='center', width=50)
         time.sleep(0.1)
     # print(s)
