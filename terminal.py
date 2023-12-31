@@ -23,7 +23,7 @@ if __name__ == '__main__':
             draw = Draw(console, './icon_gif/')
             draw.draw()
 
-            vol = progress.add_task('[green]音量', total=100)
+            vol = progress.add_task('[red]音量', total=100)
             audio_input_vol = StreamWithVolumeDisplay(audio_input,
                                                       lambda v: progress.update(vol, visible=True, completed=v))
 

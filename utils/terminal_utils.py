@@ -102,7 +102,7 @@ class Printer:
         self.history = []
 
     def _print(self, role, text):
-        text = Text.from_markup(f'[yellow]{text}', overflow='fold')
+        text = Text.from_markup(f"[{'yellow' if role == 'User' else 'green'}]{text}", overflow='fold')
         panel = Panel(text, title=f'[b]{role}[/b]', title_align='right' if role == 'User' else 'left')
         columns = Columns((panel,))
         self.console.print(columns, justify='right' if role == 'User' else 'left', width=80)
