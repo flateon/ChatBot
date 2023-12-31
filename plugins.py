@@ -4,17 +4,6 @@ import requests
 
 from keys import weather_keys, news_keys, top_news_keys
 
-import time
-
-
-# prompt:{daily: [{date: 2023-12-26, text_day: 阴, code_day: 9, text_night: 阴, code_night: 9, high: 10, low: -1,
-# rainfall: 0, precip: 0, wind_direction: 东, wind_direction_degree: 90, wind_speed: 8.4, wind_scale: 2,
-# humidity: 73}, {date: 2023-12-27, text_day: 晴, code_day: 0, text_night: 晴, code_night: 1, high: 12, low: -1,
-# rainfall: 0, precip: 0, wind_direction: 西北, wind_direction_degree: 315, wind_speed: 8.4, wind_scale: 2,
-# humidity: 82}, {date: 2023-12-28, text_day: 晴, code_day: 0, text_night: 多云, code_night: 4, high: 12, low: 1,
-# rainfall: 0, precip: 0, wind_direction: 北, wind_direction_degree: 0, wind_speed: 3.0, wind_scale: 1,
-# humidity: 88}], now: {text: 多云, code: 4, temperature: 8}, city: 南京, today: 2023-12-26}
-# 你是一个语音助手，请使用自然、对话式的语言，确保语言清晰、易于理解。请简洁并确保内容相关。除非被询问要深入讨论，大部分的回应应该只有一两句话。不要长篇大论。请你回答下面的问题： 南京未来一周的天气如何？
 
 def get_weather(city: str = '南京'):
     forcast_url = f"https://api.seniverse.com/v3/weather/daily.json?key={weather_keys}&location={city}&language=zh-Hans&unit=c&start=0&days=3"
