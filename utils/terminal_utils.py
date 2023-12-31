@@ -2,6 +2,7 @@ import re
 import sys
 from functools import partial
 
+import numpy as np
 import pyaudio
 import rich
 from dashscope.api_entities.dashscope_response import SpeechSynthesisResponse
@@ -117,3 +118,24 @@ class Printer:
 
     def get_live_print(self, role):
         return partial(self.live_print, role=role)
+
+
+class StreamWithVolumeDisplay:
+    def __init__(self, audio_stream, volume_displayer):
+        self.audio_stream = audio_stream
+        self.volume_display = volume_displayer
+
+    def read(self, num_frames, exception_on_overflow=False):
+        audio = self.audio_stream.read(num_frames, exception_on_overflow)
+
+        audio_np = np.frombuffer(audio, dtype=np.int16).astype(np.float32) / 32768
+        volume = np.log10(np.mean(audio_np ** 2) + 1e-10) * 20 + 100
+        self.volume_display(volume)
+
+        return audio
+
+    def write(self, audio):
+        self.audio_stream.write(audio)
+
+    def close(self):
+        self.audio_stream.close()
