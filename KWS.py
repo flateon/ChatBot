@@ -12,7 +12,7 @@ from kws_model import Wav2Vec2Finetuner
 
 
 class KeywordSpotter():
-    def __init__(self):
+    def __init__(self, templates_folder='./Records/positive/'):
         # bundle = torchaudio.pipelines.WAV2VEC2_BASE
         # self.acoustic_model = bundle.get_model()
         # self.sr = bundle.sample_rate
@@ -24,7 +24,7 @@ class KeywordSpotter():
         self.window_size = 10
         self.overlap_size = 10
         self.overlap_count = 0
-        self.threshold = 800
+        self.threshold = 200
 
         def manhattan_distance(x, y):
             return np.linalg.norm(x - y, ord=1)
@@ -37,8 +37,12 @@ class KeywordSpotter():
 
         self.dist = euclidean_distance
 
-        templates_folder = './positive/'
-        templates_paths = ['template1.wav', 'template2.wav', 'template3.wav']
+        self.templates_folder = templates_folder
+        # templates_paths = ['template1.wav', 'template2.wav', 'template3.wav']
+        templates_paths = []
+        for f in os.listdir(templates_folder):
+            if f.startswith('template') and f.endswith('wav'):
+                templates_paths.append(f)
         self.templates = []
         for t_path in templates_paths:
             path = os.path.join(templates_folder, t_path)
@@ -49,6 +53,7 @@ class KeywordSpotter():
         # self.acoustic_model = torch.jit.trace(self.acoustic_model, (t_input,))
 
     def check(self, chunk):
+        '''Collect chunks and CHECK if the keyword appears'''
         ndata = np.frombuffer(chunk, dtype=np.int16)
         if len(self.buffer) == self.window_size:
             self.buffer.pop(0)
@@ -70,6 +75,24 @@ class KeywordSpotter():
             # print(f'MatchTime: {time3-time2}')
         return False
 
+    def test(self):
+        examples = ['positive', 'negative', 'noise']
+        for eg in examples:
+            wave, _ = torchaudio.load(os.path.join(self.templates_folder, f'{eg}.wav'))
+            with torch.inference_mode():
+                emission, _ = self.acoustic_model(wave)
+            # time2 = time.time()
+            score = self.match(emission.squeeze(0))
+            print(f"{eg} test: {score < self.threshold}")
+
+    def single_test(self, path):
+        wave, _ = torchaudio.load(path)
+        with torch.inference_mode():
+            emission, _ = self.acoustic_model(wave)
+        # time2 = time.time()
+        score = self.match(emission.squeeze(0))
+        print(f"single test: {score < self.threshold}")
+
     def match(self, search):
         losses = []
         for template in self.templates:
@@ -88,7 +111,7 @@ class KeywordSpotter():
 
 
 if __name__ == '__main__':
-    KWSer = KeywordSpotter()
+    KWSer = KeywordSpotter('./Records/dingzhen/')
 
     p = pyaudio.PyAudio()
     stream = p.open(
@@ -100,10 +123,11 @@ if __name__ == '__main__':
         # stream_callback=callback
     )
 
-    while stream:
-        data = stream.read(3200)
-        res = KWSer.check(data)
-        print(f"Check Result: {res}")
+    KWSer.test()
+    # while stream:
+    #     data = stream.read(3200)
+    #     res = KWSer.check(data)
+    #     print(f"Check Result: {res}")
 
     # data = stream.read(3200)
     # for _ in range(1000):
