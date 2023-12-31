@@ -1,4 +1,5 @@
 import numpy as np
+import pyaudio
 from rich.progress import Progress, BarColumn, TextColumn
 
 from asr import ASR
@@ -7,32 +8,42 @@ from tts import TTS
 from utils.terminal_utils import TerminalASRCallback, TerminalCallback, TerminalTTSCallback, Printer
 
 if __name__ == '__main__':
-    with Progress(TextColumn("[progress.description]{task.description}"), BarColumn()) as progress:
-        vol = progress.add_task('[green]Volume', total=100)
-        console = progress.console
-        printer = Printer(console)
-        console.clear()
+    audio_player = pyaudio.PyAudio()
+    audio_input = audio_player.open(16000, 1, pyaudio.paInt16, input=True, frames_per_buffer=1600)
+    audio_output = audio_player.open(24000, 1, pyaudio.paInt16, output=True)
+    try:
+        with Progress(TextColumn("[progress.description]{task.description}"), BarColumn()) as progress:
+            vol = progress.add_task('[green]Volume', total=100)
+            console = progress.console
+            printer = Printer(console)
+            console.clear()
 
-        asr = ASR(TerminalASRCallback(logger=printer.get_live_print('User')))
-        tts = TTS(TerminalTTSCallback(sample_rate=24000), sample_rate=24000,
-                  model={'zh': 'sambert-zhiwei-v1', 'en': 'sambert-cindy-v1'})
-        llm = LLMPlugin(TerminalCallback(tts, logger=printer.get_live_print('Bot')))
+            asr = ASR(TerminalASRCallback(logger=printer.get_live_print('User')))
+            tts = TTS(TerminalTTSCallback(audio_output), sample_rate=24000,
+                      model={'zh': 'sambert-zhiwei-v1', 'en': 'sambert-cindy-v1'})
+            llm = LLMPlugin(TerminalCallback(tts, logger=printer.get_live_print('Bot')))
 
-        while True:
-            asr.start()
+            while True:
+                asr.start()
+                while not asr.is_done():
+                    audio = audio_input.read(1600, exception_on_overflow=False)
 
-            while not asr.is_done():
-                audio = asr.callback.read()
+                    audio_np = np.frombuffer(audio, dtype=np.int16).astype(np.float32) / 32768
+                    for a in audio_np.reshape(10, -1):
+                        volume = np.log10(np.mean(a ** 2) + 1e-10) * 20
+                        progress.update(vol, completed=volume + 100, visible=True)
 
-                audio_np = np.frombuffer(audio, dtype=np.int16).astype(np.float32) / 32768
-                for a in audio_np.reshape(10, -1):
-                    volume = np.log10(np.mean(a ** 2) + 1e-10) * 20
-                    progress.update(vol, completed=volume + 100, visible=True)
+                    asr.send_audio_frame(audio)
+                progress.update(vol, visible=False)
+                asr.stop()
 
-                asr.send_audio_frame(audio)
-            progress.update(vol, visible=False)
+                user_msg = asr.get_sentence()
+                # user_msg = input('user: ')
+                mgs = llm.generate(user_msg).content
+    except Exception() as e:
+        print(e)
 
-            asr.stop()
-            user_msg = asr.get_sentence()
-            # user_msg = input('user: ')
-            mgs = llm.generate(user_msg).content
+    finally:
+        audio_input.close()
+        audio_output.close()
+        audio_player.terminate()

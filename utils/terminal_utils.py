@@ -19,23 +19,11 @@ class TerminalASRCallback(RecognitionCallback):
     def __init__(self, logger=None):
         self.sentence = None
         self.done = False
-        self.mic = None
-        self.stream = None
         self.logger = logger if logger is not None else Printer(rich.Console())
 
     def on_open(self) -> None:
         self.done = False
         self.sentence = None
-        self.mic = pyaudio.PyAudio()
-        self.stream = self.mic.open(format=pyaudio.paInt16,
-                                    channels=1,
-                                    rate=16000,
-                                    input=True)
-
-    def on_close(self) -> None:
-        self.stream.stop_stream()
-        self.stream.close()
-        self.mic.terminate()
 
     def on_event(self, result: RecognitionResult) -> None:
         sentence = result.get_sentence()
@@ -45,12 +33,6 @@ class TerminalASRCallback(RecognitionCallback):
             self.done = True
             self.sentence = text
             self.logger(text, add_history=True)
-
-    def read(self):
-        if self.done:
-            return None
-        else:
-            return self.stream.read(1600, exception_on_overflow=False)
 
 
 class TerminalCallback(LLMCallback):
@@ -100,30 +82,15 @@ class TerminalCallback(LLMCallback):
 
 
 class TerminalTTSCallback(ResultCallback):
-    def __init__(self, sample_rate=24000):
-        self._player = None
-        self._stream = None
-        self.sample_rate = sample_rate
-
-    def on_open(self):
-        self._player = pyaudio.PyAudio()
-        self._stream = self._player.open(
-            format=pyaudio.paInt16,
-            channels=1,
-            rate=self.sample_rate,
-            output=True)
+    def __init__(self, audio_stream):
+        self.audio_stream = audio_stream
 
     def on_error(self, response: SpeechSynthesisResponse):
         print('Speech synthesizer failed, response is %s' % (str(response)))
 
-    def on_close(self):
-        self._stream.stop_stream()
-        self._stream.close()
-        self._player.terminate()
-
     def on_event(self, result: SpeechSynthesisResult):
         if result.get_audio_frame() is not None:
-            self._stream.write(result.get_audio_frame())
+            self.audio_stream.write(result.get_audio_frame())
 
 
 class Printer:
