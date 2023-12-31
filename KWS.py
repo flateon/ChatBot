@@ -57,6 +57,8 @@ class KeywordSpotter:
             score = self.match(emission.squeeze(0))
             if score < self.threshold:
                 # print(True)
+                self.buffer = []
+                self.overlap_count = 0
                 return True
             # time3 = time.time()
             # print(f'InferTime: {time2-time1}')
