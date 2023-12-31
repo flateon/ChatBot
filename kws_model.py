@@ -144,7 +144,7 @@ class Wav2Vec2Finetuner(nn.Module):
         self.input_dim = input_dim
         self.num_class = num_class
     
-    def forward(self, inputs, input_lengths):
+    def forward(self, inputs, input_lengths=None):
         features, _ = self.encoder(inputs)
         logits = self.decoder(features)
         logprobs = nn.LogSoftmax(2)(logits)
