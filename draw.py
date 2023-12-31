@@ -1,9 +1,9 @@
+import os
+from time import sleep
+
 from PIL import Image
-import rich
 from rich.console import Console
 from rich.text import Text
-import os
-import time
 
 
 def to_string(img: Image, dest_width: int, unicode: bool = True) -> str:
@@ -13,7 +13,7 @@ def to_string(img: Image, dest_width: int, unicode: bool = True) -> str:
     dest_height = dest_height + 1 if dest_height % 2 != 0 else dest_height
     img = img.resize((dest_width, dest_height))
     output = ""
-    
+
     for y in range(0, dest_height, 2):
         for x in range(dest_width):
             if unicode:
@@ -23,25 +23,28 @@ def to_string(img: Image, dest_width: int, unicode: bool = True) -> str:
             else:
                 r, g, b = img.getpixel((x, y))
                 output = output + f"[on rgb({r},{g},{b})] [/]"
-        
+
         output = output + "\n"
-    
+
     return output
 
 
-if __name__ == '__main__':
-    # rich.print("[on rgb(255,0,0)]▀[/]")
-    
-    folder = './icon_gif/'
-    img_strs = []
-    for f in os.listdir(folder):
-        img = Image.open(os.path.join(folder, f))
-        s = to_string(img, 40, True)
-        img_strs.append(Text.from_markup(s))
-    
-    console = Console()
-    for s in img_strs:
-        console.clear()
-        console.print(s, justify='center', width=50)
-        time.sleep(0.1)
-    # print(s)
+class Draw:
+    def __init__(self, console: Console, path: str):
+        self.img_strs = []
+        self.console = console
+        self.path = path
+        self.img2str()
+
+    def img2str(self):
+        self.img_strs = []
+        for f in os.listdir(self.path):
+            img = Image.open(os.path.join(self.path, f))
+            s = to_string(img, 30, True)
+            self.img_strs.append(Text.from_markup(s))
+
+    def draw(self):
+        for idx in range(len(self.img_strs))[::-1]:
+            self.console.clear()
+            self.console.print(self.img_strs[idx], justify='center', width=45, end='', no_wrap=True)
+            sleep(0.05)

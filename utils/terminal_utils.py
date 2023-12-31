@@ -1,6 +1,8 @@
+import random
 import re
 import sys
 from functools import partial
+from pathlib import Path
 
 import numpy as np
 import pyaudio
@@ -139,3 +141,55 @@ class StreamWithVolumeDisplay:
 
     def close(self):
         self.audio_stream.close()
+
+
+class HelloByeHandler:
+    def __init__(self, tts, printer, audio_output, audio_path):
+        self.tts = tts
+        self.printer = printer
+        self.audio_output = audio_output
+        self.audio_path = Path(audio_path)
+        self.hello_text = ['我在，有什么我可以帮助你的吗？', '你好，我是小圆，有什么可以帮到你吗？']
+        self.bye_text = [
+            '很高兴能与您聊天，如果您有任何其他问题，随时欢迎回来。再见了！',
+            '感谢您的使用，希望我们的对话对您有所帮助。祝您有美好的一天，再见！',
+            '祝您一切顺利，期待下次与您再次交谈。再见！'
+        ]
+        self.hello_audio = []
+        self.bye_audio = []
+        self.load_audio()
+
+    def load_audio(self):
+        if len(list(self.audio_path.glob('hello_*.pcm'))) < len(self.hello_text):
+            for i, start in enumerate(self.hello_text):
+                result = self.tts.say(start)
+                with open(self.audio_path / f'hello_{i}.pcm', 'wb') as f:
+                    f.write(result.get_audio_data())
+                self.hello_audio.append(result.get_audio_data())
+        else:
+            for i in range(len(self.hello_text)):
+                with open(self.audio_path / f'hello_{i}.pcm', 'rb') as f:
+                    self.hello_audio.append(f.read())
+
+        if len(list(self.audio_path.glob('bye_*.pcm'))) < len(self.bye_text):
+            for i, end in enumerate(self.bye_text):
+                result = self.tts.say(end)
+                with open(self.audio_path / f'bye_{i}.pcm', 'wb') as f:
+                    f.write(result.get_audio_data())
+                self.bye_audio.append(result.get_audio_data())
+        else:
+            for i in range(len(self.bye_text)):
+                with open(self.audio_path / f'bye_{i}.pcm', 'rb') as f:
+                    self.bye_audio.append(f.read())
+
+    def hello(self):
+        idx = random.choice(range(len(self.hello_text)))
+        self.printer.get_live_print('Bot')(self.hello_text[idx], add_history=True)
+
+        data = self.hello_audio[idx]
+        self.audio_output.write(data)
+
+    def bye(self):
+        idx = random.choice(range(len(self.bye_text)))
+        self.printer.get_live_print('Bot')(self.bye_text[idx], add_history=True)
+        self.audio_output.write(self.bye_audio[idx])

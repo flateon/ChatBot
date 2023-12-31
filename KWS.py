@@ -24,7 +24,7 @@ class KeywordSpotter:
         self.window_size = 20
         self.overlap_size = 10
         self.overlap_count = 0
-        self.threshold = 200
+        self.threshold = 150
 
         self.templates_folder = templates_folder
         # templates_paths = ['template1.wav', 'template2.wav', 'template3.wav']
@@ -89,7 +89,7 @@ class KeywordSpotter:
             # losses.append(dtw.accelerated_dtw(template, search, self.dist)[0])
             losses.append(distance_fast(template, search.numpy().astype(np.float64)))
         loss = np.array(losses).mean()
-        print(loss, losses)
+        # print(loss, losses)
         return loss
 
     def chunks2tensor(self):
