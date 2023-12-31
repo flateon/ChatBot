@@ -11,7 +11,7 @@ from dtaidistance.dtw_ndim import distance_fast
 from kws_model import Wav2Vec2Finetuner
 
 
-class KeywordSpotter():
+class KeywordSpotter:
     def __init__(self, templates_folder='./Records/positive/'):
         # bundle = torchaudio.pipelines.WAV2VEC2_BASE
         # self.acoustic_model = bundle.get_model()
@@ -21,21 +21,10 @@ class KeywordSpotter():
             torch.load('./Checkpoints/Finetune_test/epoch=5-step=60000.pt'))
         self.sr = 16000
         self.buffer = []
-        self.window_size = 10
+        self.window_size = 20
         self.overlap_size = 10
         self.overlap_count = 0
         self.threshold = 200
-
-        def manhattan_distance(x, y):
-            return np.linalg.norm(x - y, ord=1)
-
-        def euclidean_distance(x, y):
-            return np.linalg.norm(x - y, ord=2)
-
-        def cosine_distance(x, y):
-            return np.dot(x, y) / (np.linalg.norm(x) * np.linalg.norm(y))
-
-        self.dist = euclidean_distance
 
         self.templates_folder = templates_folder
         # templates_paths = ['template1.wav', 'template2.wav', 'template3.wav']
@@ -50,7 +39,6 @@ class KeywordSpotter():
             with torch.inference_mode():
                 t_output, _ = self.acoustic_model(t_input)
             self.templates.append(t_output.squeeze(0).numpy().astype(np.float64))
-        # self.acoustic_model = torch.jit.trace(self.acoustic_model, (t_input,))
 
     def check(self, chunk):
         '''Collect chunks and CHECK if the keyword appears'''
@@ -109,6 +97,12 @@ class KeywordSpotter():
         tchunk, _ = torchaudio.load(bytes_io)
         return tchunk
 
+    def detect(self, stream):
+        while True:
+            pcm = stream.read(1600)
+            if self.check(pcm):
+                break
+
 
 if __name__ == '__main__':
     KWSer = KeywordSpotter('./Records/dingzhen/')
@@ -118,16 +112,15 @@ if __name__ == '__main__':
         format=pyaudio.paInt16,
         channels=1,
         rate=16000,
-        frames_per_buffer=3200,
+        frames_per_buffer=1600,
         input=True,
         # stream_callback=callback
     )
 
-    KWSer.test()
-    # while stream:
-    #     data = stream.read(3200)
-    #     res = KWSer.check(data)
-    #     print(f"Check Result: {res}")
+    while stream:
+        data = stream.read(1600)
+        res = KWSer.check(data)
+        print(f"Check Result: {res}")
 
     # data = stream.read(3200)
     # for _ in range(1000):

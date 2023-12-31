@@ -1,3 +1,5 @@
+import time
+
 import dashscope
 from dashscope.audio.asr import (Recognition, RecognitionCallback)
 
@@ -16,13 +18,17 @@ class ASR(Recognition):
     def get_sentence(self):
         if self.callback.done:
             return self.callback.sentence
+        else:
+            return None
 
     def is_done(self):
         return self.callback.done
 
-    def start(self, phrase_id: str = None, **kwargs):
-        super().start()
-        while not self.is_done():
+    def start(self, phrase_id: str = None, idle_timeout: int = 30, **kwargs):
+        super().start(phrase_id, **kwargs)
+        start_time = time.time()
+        while not self.is_done() and time.time() - start_time < idle_timeout:
             audio = self.audio_input.read(1600, exception_on_overflow=False)
             self.send_audio_frame(audio)
         self.stop()
+        return self.get_sentence()

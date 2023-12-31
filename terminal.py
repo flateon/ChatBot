@@ -1,7 +1,9 @@
-import numpy as np
+import time
+
 import pyaudio
 from rich.progress import Progress, BarColumn, TextColumn
 
+import KWS
 from asr import ASR
 from llm import LLMPlugin
 from tts import TTS
@@ -22,18 +24,30 @@ if __name__ == '__main__':
             audio_input_vol = StreamWithVolumeDisplay(audio_input,
                                                       lambda v: progress.update(vol, visible=True, completed=v))
 
-            asr = ASR(TerminalASRCallback(logger=printer.get_live_print('User')), audio_input=audio_input_vol)
-            tts = TTS(TerminalTTSCallback(audio_output), sample_rate=24000,
-                      model={'zh': 'sambert-zhiwei-v1', 'en': 'sambert-cindy-v1'})
-            llm = LLMPlugin(TerminalCallback(tts, logger=printer.get_live_print('Bot')))
+            kws = KWS.KeywordSpotter()
 
             while True:
-                asr.start()
-                progress.update(vol, visible=False)
+                kws.detect(audio_input_vol)
 
-                user_msg = asr.get_sentence()
-                # user_msg = input('user: ')
-                mgs = llm.generate(user_msg).content
+                tts.say('我在，有什么我可以帮助你的吗？')
+                printer.get_live_print('Bot')('我在，有什么我可以帮助你的吗？', add_history=True)
+
+                asr = ASR(TerminalASRCallback(logger=printer.get_live_print('User')), audio_input=audio_input_vol)
+                tts = TTS(TerminalTTSCallback(audio_output), sample_rate=24000,
+                          model={'zh': 'sambert-zhiwei-v1', 'en': 'sambert-cindy-v1'})
+                llm = LLMPlugin(TerminalCallback(tts, logger=printer.get_live_print('Bot')))
+
+                while True:
+                    user_msg = asr.start(idle_timeout=20)
+                    # asr timeout
+                    if user_msg is None:
+                        printer.get_live_print('Bot')('如有需要，请随时召唤我。祝您有美好的一天！再见！', add_history=True)
+                        tts.say('如有需要，请随时召唤我。祝您有美好的一天！再见！')
+                        break
+
+                    progress.update(vol, visible=False)
+                    # user_msg = input('user: ')
+                    mgs = llm.generate(user_msg).content
     except Exception as e:
         print(e)
 
