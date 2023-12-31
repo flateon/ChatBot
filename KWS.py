@@ -8,7 +8,7 @@ import torch
 import torchaudio
 from dtaidistance.dtw_ndim import distance_fast
 
-from kws_plmodel import Wav2Vec2Finetuner
+from kws_model import Wav2Vec2Finetuner
 
 
 class KeywordSpotter():
