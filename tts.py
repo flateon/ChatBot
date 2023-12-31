@@ -24,7 +24,7 @@ class TTS:
         else:
             model = self.model['en']
 
-        return SpeechSynthesizer.call(model=model, text=text, sample_rate=self.sample_rate, format='wav',
+        return SpeechSynthesizer.call(model=model, text=text, sample_rate=self.sample_rate, format='pcm',
                                       callback=self.callback)
 
 
