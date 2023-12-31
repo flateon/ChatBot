@@ -51,22 +51,6 @@ def get_cer_per_sample(hypotheses, hypothesis_lengths, references, reference_len
 
 
 class LightningCTC(pl.LightningModule):
-    """PyTorch Lightning class for training a CTC model.
-    
-    Args:
-        n_mels: number of mel frequencies. (default: 128)
-        n_fft: number of fourier features. (default: 256)
-        win_length: number of frames in a window. (default: 256)
-        hop_length: number of frames to hop in computing spectrogram. (default: 128)
-        wav_max_length: max number of timesteps in a waveform spectrogram. (default: 200)
-        transcript_max_length: max number of characters in decoded transcription. (default: 200)
-        learning_rate: learning rate for Adam optimizer. (default: 1e-3)
-        batch_size: batch size used in optimization and evaluation. (default: 256)
-        weight_decay: weight decay for Adam optimizer. (default: 1e-5)
-        encoder_num_layers: number of layers in LSTM encoder. (default: 2)
-        encoder_hidden_dim: number of hidden dimensions in LSTM encoder. (default: 256)
-        encoder_bidirectional: directionality of LSTM encoder. (default: True)
-    """
     def __init__(self, n_mels=128, n_fft=256, win_length=256, hop_length=128,
                 wav_max_length=200, transcript_max_length=200,
                 learning_rate=1e-3, batch_size=256, weight_decay=1e-5,
@@ -105,7 +89,6 @@ class LightningCTC(pl.LightningModule):
         return model
     
     def create_datasets(self):
-        # root = os.path.join(DATA_PATH, 'harper_valley_bank_minified')
         root = './Dataset/raw'
         train_dataset = DatasetTHCHS30_raw(root, split='train')
         # train_dataset = DatasetTHCHS30(root, split='valid')
@@ -210,8 +193,6 @@ class LightningCTC(pl.LightningModule):
         self.test_outputs.clear()
     
     def train_dataloader(self):
-        # - important to shuffle to not overfit!
-        # - drop the last batch to preserve consistent batch sizes
         loader = DataLoader(self.train_dataset, batch_size=self.batch_size, num_workers=1,
                             shuffle=True, pin_memory=True, drop_last=True)
         return loader
@@ -232,7 +213,7 @@ class LightningCTC(pl.LightningModule):
 def run(system, config, ckpt_dir, epochs=1, monitor_key='val_loss',
         use_gpu=False, seed=1337):
     
-    WANDB_NAME = '2553036255' # Fill in your Weights & Biases ID here.
+    WANDB_NAME = '2553036255'
     MODEL_PATH = './Checkpoints'
     
     random.seed(seed)
@@ -284,16 +265,5 @@ if __name__ == '__main__':
         'encoder_bidirectional': True,
     }
     
-    # NOTES:
-    # -----
-    # - PyTorch Lightning will run 2 steps of validation prior to the first
-    #   epoch to sanity check that validation works (otherwise you
-    #   might waste an epoch training and error).
-    # - The progress bar updates very slowly, the model is likely
-    #   training even if it doesn't look like it is.
-    # - Wandb will generate a URL for you where all the metrics will be logged.
-    # - Every validation loop, the best performing model is saved.
-    # - After training, the system will evaluate performance on the test set.
-    run(system="LightningCTC", config=config, ckpt_dir='Finetune_test', epochs=80)
-    # Use Validset For Debugging
+    run(system="LightningCTC", config=config, ckpt_dir='Finetune_test', epochs=10)
 
