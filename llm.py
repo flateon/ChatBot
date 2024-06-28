@@ -33,7 +33,7 @@ class LLMCallback:
 
 
 class LLM:
-    def __init__(self, callback: LLMCallback = None, model='qwen-max', max_token=200, enable_search=False, stream=True,
+    def __init__(self, callback: LLMCallback = None, model='qwen-long', max_token=200, enable_search=False, stream=True,
                  **kwargs):
         self.callback = callback if callback is not None else LLMCallback()
         self.date = date.today().strftime('%Y-%m-%d')
@@ -79,7 +79,7 @@ class LLM:
 
 
 class LLMPlugin(LLM):
-    def __init__(self, callback: LLMCallback = None, model='qwen-max', max_token=200, enable_search=False, stream=True,
+    def __init__(self, callback: LLMCallback = None, model='qwen-long', max_token=200, enable_search=False, stream=True,
                  **kwargs):
         super().__init__(callback=callback, model=model, max_token=max_token, enable_search=enable_search,
                          stream=stream, **kwargs)
