@@ -88,13 +88,13 @@ class LLMPlugin(LLM):
         reply = super().generate(messages)
 
         try:
-            if 'get_weather' in reply.content.lower():
+            if '```weather' in reply.content.lower():
                 tool_func = get_weather
-                args = (re.search(r'get_weather\((.*?)\)', reply.content).group(1),)
+                args = (re.search(r"```weather\s*(.*?)\s*```", reply.content).group(1),)
 
-            elif 'get_news' in reply.content.lower():
+            elif '```news' in reply.content.lower():
                 tool_func = get_news
-                args = (re.search(r'get_news\((.*?)\)', reply.content).group(1),)
+                args = (re.search(r"```news\s*(.*?)\s*```", reply.content).group(1),)
             elif '```python' in reply.content.lower():
                 tool_func = python
                 args = (re.search(r"```python\s*(.*?)\s*```", reply.content, re.S).group(1),)
