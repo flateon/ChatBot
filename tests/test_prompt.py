@@ -40,6 +40,17 @@ class TestChinesePrompt(unittest.TestCase):
                 LLMPlugin(TestCallback()).generate(text)
         self.assertEqual(input('Is the Prompt OK?[y/n]'), 'y')
 
+    def test_python(self):
+        test_case = [
+            ['根号10是多少'],
+            ['86寸电视有长多少米'],
+            ['我身高一米八，体重七十公斤，我的BMI是多少']
+        ]
+        for case in test_case:
+            for text in case:
+                LLMPlugin(TestCallback()).generate(text)
+        self.assertEqual(input('Is the Prompt OK?[y/n]'), 'y')
+
 
 class TestEnglishPrompt(unittest.TestCase):
 

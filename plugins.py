@@ -5,6 +5,15 @@ import requests
 from keys import weather_keys, news_keys, top_news_keys
 
 
+def python(code: str):
+    local_vars = {}
+    exec(code, {}, local_vars)
+    if 'result' in local_vars:
+        return local_vars['result']
+    else:
+        return local_vars
+
+
 def get_weather(city: str = '南京'):
     forcast_url = f"https://api.seniverse.com/v3/weather/daily.json?key={weather_keys}&location={city}&language=zh-Hans&unit=c&start=0&days=3"
     now_url = f"https://api.seniverse.com/v3/weather/now.json?key={weather_keys}&location={city}&language=zh-Hans&unit=c&start=0&days=3"

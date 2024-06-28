@@ -6,7 +6,7 @@ import dashscope
 from dashscope.api_entities.dashscope_response import Message, Role
 
 from keys import dashscope_keys
-from plugins import get_weather, get_news
+from plugins import get_weather, get_news, python
 from prompts import SYSTEM_PROMPT, TOOL_PROMPT
 
 dashscope.api_key = dashscope_keys
@@ -87,18 +87,21 @@ class LLMPlugin(LLM):
     def generate(self, messages):
         reply = super().generate(messages)
 
-        if 'get_weather' in reply.content.lower():
-            tool_func = get_weather
-            args = (re.search(r'get_weather\((.*?)\)', reply.content).group(1),)
-
-        elif 'get_news' in reply.content.lower():
-            tool_func = get_news
-            args = (re.search(r'get_news\((.*?)\)', reply.content).group(1),)
-        else:
-            # no tool used
-            return reply
-
         try:
+            if 'get_weather' in reply.content.lower():
+                tool_func = get_weather
+                args = (re.search(r'get_weather\((.*?)\)', reply.content).group(1),)
+
+            elif 'get_news' in reply.content.lower():
+                tool_func = get_news
+                args = (re.search(r'get_news\((.*?)\)', reply.content).group(1),)
+            elif '```python' in reply.content.lower():
+                tool_func = python
+                args = (re.search(r"```python\s*(.*?)\s*```", reply.content, re.S).group(1),)
+            else:
+                # no tool used
+                return reply
+
             api_response = tool_func(*args)
         except Exception as e:
             api_response = f'调用错误：{e}'
