@@ -4,7 +4,7 @@
 [![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
 
 <p align="center">
-  <img src="assets/demo.webp" alt="语音聊天机器人演示" width="600"/>
+  <img src="assets/demo.webp" alt="语音聊天机器人演示" width="500"/>
 </p>
 
 一个基于终端界面的中文语音聊天机器人，支持自定义唤醒词和实时语音对话。通过语音识别、大语言模型和文本转语音技术，实现自然流畅的语音交互体验。
@@ -100,6 +100,9 @@ python -m unittest tests/test_prompt.py
 ```
 
 ## ▶️ 演示视频
+
+https://github.com/user-attachments/assets/99f436a0-8042-4167-8de3-8320b0784760
+
 
 
 ## 📄 许可证
