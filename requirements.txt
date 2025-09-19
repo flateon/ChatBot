@@ -1,0 +1,18 @@
+# 核心依赖
+torch>=2.0.0
+torchaudio
+numpy
+pyaudio
+scipy
+dashscope
+requests
+rich
+Pillow
+
+# KWS相关依赖
+dtaidistance
+
+# 训练相关依赖（可选）
+pytorch-lightning
+wandb
+librosa
